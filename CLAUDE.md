@@ -1,8 +1,16 @@
-# CLAUDE.md
+# DevStash
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+A developer knowledge hub for snippets, commands, prompts, notes, files, images, links and custom types.
 
-@AGENTS.md
+## Context Files
+
+Read the following to get the full context of the project:
+
+- @context/project-overview.md
+- @context/coding-standards.md
+- @context/ai-interaction.md
+- @context/current-feature.md
+
 
 ## Commands
 
@@ -12,4 +20,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run lint` — ESLint (flat config, `eslint-config-next` core-web-vitals + typescript)
 - `npx tsc --noEmit` — type-check only
 
-There is no test framework set up yet.
+
+
+
