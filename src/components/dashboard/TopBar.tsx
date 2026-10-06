@@ -1,4 +1,5 @@
 import { Layers, Plus, Search } from "lucide-react";
+import { SidebarToggle } from "@/components/dashboard/SidebarToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -6,6 +7,7 @@ export function TopBar() {
   return (
     <header className="flex h-14 shrink-0 items-center gap-4 border-b px-4">
       <div className="flex items-center gap-2 md:w-60">
+        <SidebarToggle />
         <div className="flex size-8 items-center justify-center rounded-lg bg-violet-600 text-white">
           <Layers className="size-4" />
         </div>
