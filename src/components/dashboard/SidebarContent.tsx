@@ -1,30 +1,10 @@
-import {
-  Code,
-  File,
-  Folder,
-  Image as ImageIcon,
-  Link as LinkIcon,
-  Sparkles,
-  Star,
-  StickyNote,
-  Terminal,
-  type LucideIcon,
-} from "lucide-react";
+import { Folder, Star } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { SidebarNavLink } from "@/components/dashboard/SidebarNavLink";
 import { SidebarUser } from "@/components/dashboard/SidebarUser";
+import { getTypeIcon } from "@/lib/item-types";
 import { itemTypes, type MockCollection } from "@/lib/mock-data";
 import { getFavoriteCollections, getRecentCollections, getTypeHref } from "@/lib/sidebar-data";
-
-const TYPE_ICONS: Record<string, LucideIcon> = {
-  Code,
-  Sparkles,
-  Terminal,
-  StickyNote,
-  File,
-  Image: ImageIcon,
-  Link: LinkIcon,
-};
 
 interface SidebarContentProps {
   collapsed: boolean;
@@ -86,7 +66,7 @@ export function SidebarContent({ collapsed, onNavigate }: SidebarContentProps) {
               key={type.id}
               href={getTypeHref(type.name)}
               label={type.name}
-              icon={TYPE_ICONS[type.icon] ?? File}
+              icon={getTypeIcon(type.icon)}
               iconColor={type.color}
               collapsed={collapsed}
               onNavigate={onNavigate}
