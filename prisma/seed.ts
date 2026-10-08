@@ -28,11 +28,13 @@ interface SeedItem {
   content?: string;
   language?: string;
   url?: string;
+  isFavorite?: boolean;
 }
 
 interface SeedCollection {
   name: string;
   description: string;
+  isFavorite?: boolean;
   items: SeedItem[];
 }
 
@@ -40,12 +42,14 @@ const COLLECTIONS: SeedCollection[] = [
   {
     name: "React Patterns",
     description: "Reusable React patterns and hooks",
+    isFavorite: true,
     items: [
       {
         type: "snippet",
         title: "useDebounce Hook",
         description: "Debounce a fast-changing value such as search input",
         language: "typescript",
+        isFavorite: true,
         content: `import { useEffect, useState } from "react";
 
 export function useDebounce<T>(value: T, delay = 300): T {
@@ -103,11 +107,13 @@ export function cn(...inputs: ClassValue[]) {
   {
     name: "AI Workflows",
     description: "AI prompts and workflow automations",
+    isFavorite: true,
     items: [
       {
         type: "prompt",
         title: "Code Review Prompt",
         description: "Thorough review for bugs, security and performance",
+        isFavorite: true,
         content:
           "Review the following code. List bugs, security issues and performance problems, ordered by severity. For each, explain the impact and suggest a concrete fix with a code example. Skip style nitpicks.",
       },
@@ -159,6 +165,7 @@ CMD ["npm", "start"]`,
         title: "Deploy Database Migrations",
         description: "Apply pending Prisma migrations in production",
         language: "bash",
+        isFavorite: true,
         content: "npx prisma migrate deploy",
       },
       {
@@ -184,6 +191,7 @@ CMD ["npm", "start"]`,
         title: "Undo Last Commit",
         description: "Undo the last commit but keep the changes staged",
         language: "bash",
+        isFavorite: true,
         content: "git reset --soft HEAD~1",
       },
       {
@@ -224,6 +232,7 @@ CMD ["npm", "start"]`,
         title: "shadcn/ui",
         description: "Accessible components to copy into your project",
         url: "https://ui.shadcn.com",
+        isFavorite: true,
       },
       {
         type: "link",
@@ -272,11 +281,10 @@ async function seedCollections(userId: string, typeIds: Map<SystemTypeName, stri
   await prisma.item.deleteMany({ where: { userId } });
   await prisma.collection.deleteMany({ where: { userId } });
 
-  for (const { name, description, items } of COLLECTIONS) {
+  for (const { items, ...collection } of COLLECTIONS) {
     await prisma.collection.create({
       data: {
-        name,
-        description,
+        ...collection,
         userId,
         items: {
           create: items.map(({ type, ...item }) => ({
