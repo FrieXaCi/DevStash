@@ -2,36 +2,13 @@
 
 ## Status
 
-In Progress
+Completed
 
 ## Goals
 
-Stats & Sidebar: show dashboard stats from the database instead of `src/lib/mock-data.ts`, and drive the sidebar's item types and collections from the database.
-
-- Stats cards show database data, keeping the current design/layout
-- Sidebar lists the system item types with their icons, linking to `/items/[typename]`
-- Sidebar collections come from the database
-- "View all collections" link under the collections list, going to `/collections`
-- Favorite collections keep their star icons; recent collections show a colored circle based on the most-used item type in that collection
-
 ## Todo
 
-- [x] Add item type database functions to `src/lib/db/items.ts` (use `src/lib/db/collections.ts` for reference)
-- [x] Add sidebar collection queries (favorites + recents with most-used type color)
-- [x] Replace remaining mock data in the stats cards with database data (already DB-driven)
-- [x] Fetch sidebar data on the server and pass it to the sidebar
-- [x] Render system item types with icons, linking to `/items/[typename]`
-- [x] Render favorite collections with star icons and recent collections with type-colored circles
-- [x] Add "View all collections" link to `/collections`
-- [x] Run `npm run build`
-- [ ] Verify in the browser
-
 ## Notes
-
-- Spec: `context/features/stats-sidebar-spec.md`
-- Reference: `src/lib/db/collections.ts`
-- `src/lib/db/items.ts` already exists (from Dashboard Items) — add the new functions there rather than creating it
-- Queries are not yet scoped to a user (no auth)
 
 ## History
 
@@ -43,3 +20,4 @@ Stats & Sidebar: show dashboard stats from the database instead of `src/lib/mock
 - **Dashboard Collections** (Completed): Dashboard collection cards and collection stats now load from Neon via Prisma (`src/lib/db/collections.ts`: `getRecentCollections`, `getCollectionStats`); `/dashboard` is an async, dynamically rendered server component. Card border color comes from the collection's most-used item type, with icons for every type it contains, and an empty state when there are no collections. `TypeIcon` accepts DB or mock types via a shared `ItemTypeDisplay` type. Item stats, pinned/recent items and the sidebar still use mock data, and queries are not yet scoped to a user (no auth). Verified with real data after the Seed Data feature.
 - **Seed Data** (Completed): `prisma/seed.ts` seeds a demo user (`demo@devstash.io`, bcryptjs-hashed password, 12 rounds), the 7 system item types, and 5 collections with 18 items (snippets, prompts, commands, links with real URLs). Re-runnable: upserts the user, finds-or-updates system types, and recreates the demo user's collections and items. Registered as the Prisma seed command in `prisma.config.ts`; run with `npm run db:seed`. `bcryptjs` added as a dependency.
 - **Dashboard Items** (Completed): Pinned items, the 10 most recent items, and item stats (total, favorites) now load from Neon via Prisma (`src/lib/db/items.ts`: `getPinnedItems`, `getRecentItems`, `getItemStats`), fetched in parallel with the collection data on `/dashboard`. Item card icon and border color come from the item's type, tags are shown as badges, the pinned section is hidden when nothing is pinned, and recent items have an empty state. Mock `getItemType` lookup removed; `formatItemDate` now takes a `Date`. Seed data has no pinned/favorite/tagged items yet, and queries are not yet scoped to a user (no auth). The sidebar still uses mock data.
+- **Stats & Sidebar** (Completed): Sidebar now loads from Neon via Prisma, fetched in the async `/dashboard` layout (force-dynamic) and passed as props to the client `Sidebar`. System item types (`getSystemItemTypes` in `src/lib/db/items.ts`) show their icon, color and item count, labelled via `getTypeLabel` (`snippet` → "Snippets"), ordered by `SYSTEM_TYPE_ORDER` in `src/lib/item-types.ts`, and link to `/items/[typename]`. Collections (`getSidebarCollections` in `src/lib/db/collections.ts`, sharing a `findCollections` helper with `getRecentCollections`) are grouped under a "Collections" heading: favorites (A–Z, star icon) and the 5 most recent non-favorites (colored dot for the most-used item type), with a "View all collections" link to `/collections`; empty groups are hidden. Mock collection helpers removed from `src/lib/sidebar-data.ts`. Stats cards were already database-driven. `/items/[type]` and `/collections` pages don't exist yet, the user area still uses mock data, and queries are not yet scoped to a user (no auth).
