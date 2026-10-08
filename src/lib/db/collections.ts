@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
 import type { ItemTypeDisplay } from "@/lib/item-types";
 
 const RECENT_COLLECTIONS_LIMIT = 6;
+const SIDEBAR_RECENT_COLLECTIONS_LIMIT = 5;
 
 export interface CollectionType extends ItemTypeDisplay {
   id: string;
@@ -34,10 +36,18 @@ function getTypesByUsage(itemTypes: CollectionType[]): CollectionType[] {
   return [...usage.values()].sort((a, b) => b.count - a.count).map(({ type }) => type);
 }
 
-export async function getRecentCollections(limit = RECENT_COLLECTIONS_LIMIT): Promise<DashboardCollection[]> {
+export interface SidebarCollections {
+  favorites: DashboardCollection[];
+  recents: DashboardCollection[];
+}
+
+async function findCollections(args: {
+  where?: Prisma.CollectionWhereInput;
+  orderBy: Prisma.CollectionOrderByWithRelationInput;
+  take?: number;
+}): Promise<DashboardCollection[]> {
   const collections = await prisma.collection.findMany({
-    orderBy: { updatedAt: "desc" },
-    take: limit,
+    ...args,
     select: {
       id: true,
       name: true,
@@ -54,6 +64,23 @@ export async function getRecentCollections(limit = RECENT_COLLECTIONS_LIMIT): Pr
     itemCount: items.length,
     types: getTypesByUsage(items.map((item) => item.type)),
   }));
+}
+
+export async function getRecentCollections(limit = RECENT_COLLECTIONS_LIMIT): Promise<DashboardCollection[]> {
+  return findCollections({ orderBy: { updatedAt: "desc" }, take: limit });
+}
+
+export async function getSidebarCollections(): Promise<SidebarCollections> {
+  const [favorites, recents] = await Promise.all([
+    findCollections({ where: { isFavorite: true }, orderBy: { name: "asc" } }),
+    findCollections({
+      where: { isFavorite: false },
+      orderBy: { updatedAt: "desc" },
+      take: SIDEBAR_RECENT_COLLECTIONS_LIMIT,
+    }),
+  ]);
+
+  return { favorites, recents };
 }
 
 export async function getCollectionStats(): Promise<CollectionStats> {

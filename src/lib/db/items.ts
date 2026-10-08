@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/generated/prisma/client";
-import type { ItemTypeDisplay } from "@/lib/item-types";
+import { getSystemTypeOrder, type ItemTypeDisplay } from "@/lib/item-types";
 
 const RECENT_ITEMS_LIMIT = 10;
 
@@ -13,6 +13,11 @@ export interface DashboardItem {
   updatedAt: Date;
   type: ItemTypeDisplay;
   tags: string[];
+}
+
+export interface SidebarItemType extends ItemTypeDisplay {
+  id: string;
+  itemCount: number;
 }
 
 export interface ItemStats {
@@ -55,6 +60,17 @@ export async function getRecentItems(limit = RECENT_ITEMS_LIMIT): Promise<Dashbo
   });
 
   return items.map(toDashboardItem);
+}
+
+export async function getSystemItemTypes(): Promise<SidebarItemType[]> {
+  const types = await prisma.itemType.findMany({
+    where: { isSystem: true },
+    select: { id: true, name: true, icon: true, color: true, _count: { select: { items: true } } },
+  });
+
+  return types
+    .map(({ _count, ...type }) => ({ ...type, itemCount: _count.items }))
+    .sort((a, b) => getSystemTypeOrder(a.name) - getSystemTypeOrder(b.name));
 }
 
 export async function getItemStats(): Promise<ItemStats> {

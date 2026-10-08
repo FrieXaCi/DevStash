@@ -1,12 +1,14 @@
-import { Folder, Star } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Folder, Star } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { SidebarNavLink } from "@/components/dashboard/SidebarNavLink";
 import { SidebarUser } from "@/components/dashboard/SidebarUser";
-import { getTypeIcon } from "@/lib/item-types";
-import { itemTypes, type MockCollection } from "@/lib/mock-data";
-import { getFavoriteCollections, getRecentCollections, getTypeHref } from "@/lib/sidebar-data";
+import type { DashboardCollection } from "@/lib/db/collections";
+import { getTypeIcon, getTypeLabel } from "@/lib/item-types";
+import { getTypeHref, type SidebarData } from "@/lib/sidebar-data";
 
 interface SidebarContentProps {
+  data: SidebarData;
   collapsed: boolean;
   onNavigate?: () => void;
 }
@@ -18,7 +20,7 @@ interface SidebarSectionProps {
 }
 
 interface CollectionLinksProps {
-  collections: MockCollection[];
+  collections: DashboardCollection[];
   collapsed: boolean;
   onNavigate?: () => void;
 }
@@ -26,13 +28,28 @@ interface CollectionLinksProps {
 function SidebarSection({ title, collapsed, children }: SidebarSectionProps) {
   return (
     <div className="flex flex-col gap-0.5">
-      {!collapsed && (
-        <h3 className="px-2 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          {title}
-        </h3>
-      )}
+      {!collapsed && <h3 className="px-2 pb-1 text-sm font-medium text-muted-foreground">{title}</h3>}
       {children}
     </div>
+  );
+}
+
+function SidebarSubheading({ title, collapsed }: { title: string; collapsed: boolean }) {
+  if (collapsed) return null;
+
+  return (
+    <h4 className="px-2 pt-2 pb-1 text-xs font-medium tracking-wide text-muted-foreground/70 uppercase">
+      {title}
+    </h4>
+  );
+}
+
+function TypeDot({ color }: { color: string | null | undefined }) {
+  return (
+    <span
+      className="size-2.5 shrink-0 rounded-full bg-muted-foreground"
+      style={color ? { backgroundColor: color } : undefined}
+    />
   );
 }
 
@@ -49,14 +66,16 @@ function CollectionLinks({ collections, collapsed, onNavigate }: CollectionLinks
         collection.isFavorite ? (
           <Star className="size-4 fill-yellow-400 text-yellow-400" />
         ) : (
-          <span className="text-xs text-muted-foreground">{collection.itemCount}</span>
+          <TypeDot color={collection.types[0]?.color} />
         )
       }
     />
   ));
 }
 
-export function SidebarContent({ collapsed, onNavigate }: SidebarContentProps) {
+export function SidebarContent({ data, collapsed, onNavigate }: SidebarContentProps) {
+  const { itemTypes, favorites, recents } = data;
+
   return (
     <div className="flex h-full flex-col">
       <nav className="flex flex-1 flex-col gap-4 overflow-y-auto p-3">
@@ -65,9 +84,9 @@ export function SidebarContent({ collapsed, onNavigate }: SidebarContentProps) {
             <SidebarNavLink
               key={type.id}
               href={getTypeHref(type.name)}
-              label={type.name}
-              icon={getTypeIcon(type.icon)}
-              iconColor={type.color}
+              label={getTypeLabel(type.name)}
+              icon={getTypeIcon(type.icon ?? "File")}
+              iconColor={type.color ?? undefined}
               collapsed={collapsed}
               onNavigate={onNavigate}
               trailing={<span className="text-xs text-muted-foreground">{type.itemCount}</span>}
@@ -77,20 +96,31 @@ export function SidebarContent({ collapsed, onNavigate }: SidebarContentProps) {
 
         <Separator />
 
-        <SidebarSection title="Favorites" collapsed={collapsed}>
-          <CollectionLinks
-            collections={getFavoriteCollections()}
-            collapsed={collapsed}
-            onNavigate={onNavigate}
-          />
-        </SidebarSection>
+        <SidebarSection title="Collections" collapsed={collapsed}>
+          {favorites.length > 0 && (
+            <>
+              <SidebarSubheading title="Favorites" collapsed={collapsed} />
+              <CollectionLinks collections={favorites} collapsed={collapsed} onNavigate={onNavigate} />
+            </>
+          )}
 
-        <SidebarSection title="Recent" collapsed={collapsed}>
-          <CollectionLinks
-            collections={getRecentCollections()}
-            collapsed={collapsed}
-            onNavigate={onNavigate}
-          />
+          {recents.length > 0 && (
+            <>
+              <SidebarSubheading title="Recent" collapsed={collapsed} />
+              <CollectionLinks collections={recents} collapsed={collapsed} onNavigate={onNavigate} />
+            </>
+          )}
+
+          {!collapsed && (
+            <Link
+              href="/collections"
+              onClick={onNavigate}
+              className="mt-2 flex items-center gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              View all collections
+              <ArrowRight className="size-3" />
+            </Link>
+          )}
         </SidebarSection>
       </nav>
 

@@ -2,13 +2,36 @@
 
 ## Status
 
-Completed
+In Progress
 
 ## Goals
 
+Stats & Sidebar: show dashboard stats from the database instead of `src/lib/mock-data.ts`, and drive the sidebar's item types and collections from the database.
+
+- Stats cards show database data, keeping the current design/layout
+- Sidebar lists the system item types with their icons, linking to `/items/[typename]`
+- Sidebar collections come from the database
+- "View all collections" link under the collections list, going to `/collections`
+- Favorite collections keep their star icons; recent collections show a colored circle based on the most-used item type in that collection
+
 ## Todo
 
+- [x] Add item type database functions to `src/lib/db/items.ts` (use `src/lib/db/collections.ts` for reference)
+- [x] Add sidebar collection queries (favorites + recents with most-used type color)
+- [x] Replace remaining mock data in the stats cards with database data (already DB-driven)
+- [x] Fetch sidebar data on the server and pass it to the sidebar
+- [x] Render system item types with icons, linking to `/items/[typename]`
+- [x] Render favorite collections with star icons and recent collections with type-colored circles
+- [x] Add "View all collections" link to `/collections`
+- [x] Run `npm run build`
+- [ ] Verify in the browser
+
 ## Notes
+
+- Spec: `context/features/stats-sidebar-spec.md`
+- Reference: `src/lib/db/collections.ts`
+- `src/lib/db/items.ts` already exists (from Dashboard Items) — add the new functions there rather than creating it
+- Queries are not yet scoped to a user (no auth)
 
 ## History
 
