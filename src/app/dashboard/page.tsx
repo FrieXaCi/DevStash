@@ -3,15 +3,20 @@ import { CollectionCard } from "@/components/dashboard/CollectionCard";
 import { DashboardSection } from "@/components/dashboard/DashboardSection";
 import { ItemRow } from "@/components/dashboard/ItemRow";
 import { StatsCards } from "@/components/dashboard/StatsCards";
-import { getItemStats, getPinnedItems, getRecentItems } from "@/lib/dashboard-data";
 import { getCollectionStats, getRecentCollections } from "@/lib/db/collections";
+import { getItemStats, getPinnedItems, getRecentItems } from "@/lib/db/items";
 
 // Render per request so the dashboard reflects the current database state
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const [collections, collectionStats] = await Promise.all([getRecentCollections(), getCollectionStats()]);
-  const pinnedItems = getPinnedItems();
+  const [collections, collectionStats, pinnedItems, recentItems, itemStats] = await Promise.all([
+    getRecentCollections(),
+    getCollectionStats(),
+    getPinnedItems(),
+    getRecentItems(),
+    getItemStats(),
+  ]);
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
@@ -20,7 +25,7 @@ export default async function DashboardPage() {
         <p className="text-muted-foreground">Your developer knowledge hub</p>
       </div>
 
-      <StatsCards stats={{ ...getItemStats(), ...collectionStats }} />
+      <StatsCards stats={{ ...itemStats, ...collectionStats }} />
 
       <DashboardSection title="Collections" viewAllHref="/collections">
         {collections.length > 0 ? (
@@ -45,11 +50,15 @@ export default async function DashboardPage() {
       )}
 
       <DashboardSection title="Recent Items" icon={Clock}>
-        <div className="flex flex-col gap-3">
-          {getRecentItems().map((item) => (
-            <ItemRow key={item.id} item={item} />
-          ))}
-        </div>
+        {recentItems.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            {recentItems.map((item) => (
+              <ItemRow key={item.id} item={item} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground">No items yet.</p>
+        )}
       </DashboardSection>
     </div>
   );

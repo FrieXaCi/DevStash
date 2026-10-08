@@ -8,7 +8,6 @@ import {
   Terminal,
   type LucideIcon,
 } from "lucide-react";
-import { itemTypes, type MockItemType } from "@/lib/mock-data";
 
 export interface ItemTypeDisplay {
   name: string;
@@ -28,8 +27,4 @@ const TYPE_ICONS: Record<string, LucideIcon> = {
 
 export function getTypeIcon(iconName: string): LucideIcon {
   return TYPE_ICONS[iconName] ?? File;
-}
-
-export function getItemType(typeId: string): MockItemType | undefined {
-  return itemTypes.find((type) => type.id === typeId);
 }

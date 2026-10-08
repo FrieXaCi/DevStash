@@ -3,20 +3,19 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { TypeIcon } from "@/components/dashboard/TypeIcon";
 import { formatItemDate } from "@/lib/dashboard-data";
-import { getItemType } from "@/lib/item-types";
-import type { MockItem } from "@/lib/mock-data";
+import type { DashboardItem } from "@/lib/db/items";
 
 interface ItemRowProps {
-  item: MockItem;
+  item: DashboardItem;
 }
 
 export function ItemRow({ item }: ItemRowProps) {
-  const type = getItemType(item.typeId);
+  const { type } = item;
 
   return (
     <Card
       className="border-l-4 border-l-border transition-colors hover:bg-accent/50"
-      style={type ? { borderLeftColor: type.color } : undefined}
+      style={type.color ? { borderLeftColor: type.color } : undefined}
     >
       <CardContent className="flex items-start gap-4">
         <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
@@ -29,7 +28,7 @@ export function ItemRow({ item }: ItemRowProps) {
             {item.isPinned && <Pin className="size-3.5 shrink-0 text-muted-foreground" />}
             {item.isFavorite && <Star className="size-3.5 shrink-0 fill-yellow-400 text-yellow-400" />}
           </div>
-          <p className="truncate text-muted-foreground">{item.description}</p>
+          {item.description && <p className="truncate text-muted-foreground">{item.description}</p>}
           {item.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-1">
               {item.tags.map((tag) => (
@@ -41,7 +40,7 @@ export function ItemRow({ item }: ItemRowProps) {
           )}
         </div>
 
-        <time dateTime={item.updatedAt} className="shrink-0 text-xs text-muted-foreground">
+        <time dateTime={item.updatedAt.toISOString()}className="shrink-0 text-xs text-muted-foreground">
           {formatItemDate(item.updatedAt)}
         </time>
       </CardContent>
