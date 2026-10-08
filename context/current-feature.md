@@ -1,29 +1,14 @@
 # Current Feature
 
-## Dashboard Items
-
 ## Status
 
-In Progress
+Completed
 
 ## Goals
 
-Replace the mock pinned and recent items in the dashboard main area (right side) with real data from the Neon database via Prisma. The UI should look the same as now, but use the database instead of `src/lib/mock-data.ts`.
-
 ## Todo
 
-- Create `src/lib/db/items.ts` with data fetching functions (pinned items, recent items, item stats)
-- Fetch items directly in the `/dashboard` server component
-- Derive item card icon and border color from the item's type
-- Show item type tags and everything else the cards display now
-- Hide the pinned section entirely when there are no pinned items
-- Update the item stats in the stats cards with real data
-
 ## Notes
-
-- Layout and design already exist; see `context/screenshots/dashboard-ui-main.png` if needed.
-- Follow the pattern from `src/lib/db/collections.ts` (Dashboard Collections feature).
-- Queries are still not scoped to a user (no auth yet).
 
 ## History
 
@@ -34,3 +19,4 @@ Replace the mock pinned and recent items in the dashboard main area (right side)
 - **Prisma + Neon PostgreSQL Setup** (Completed): Prisma 7 with Neon driver adapter (`@prisma/adapter-neon`), `prisma.config.ts` loading `.env` via dotenv, initial schema (User, Item, ItemType, Collection, Tag, ItemTag + NextAuth Account/Session/VerificationToken) with indexes and cascade deletes, `init` migration applied to the Neon dev branch, shared client in `src/lib/prisma.ts`, generated client in `src/generated` (gitignored, `postinstall: prisma generate`), and `npm run db:test` connection test script.
 - **Dashboard Collections** (Completed): Dashboard collection cards and collection stats now load from Neon via Prisma (`src/lib/db/collections.ts`: `getRecentCollections`, `getCollectionStats`); `/dashboard` is an async, dynamically rendered server component. Card border color comes from the collection's most-used item type, with icons for every type it contains, and an empty state when there are no collections. `TypeIcon` accepts DB or mock types via a shared `ItemTypeDisplay` type. Item stats, pinned/recent items and the sidebar still use mock data, and queries are not yet scoped to a user (no auth). Verified with real data after the Seed Data feature.
 - **Seed Data** (Completed): `prisma/seed.ts` seeds a demo user (`demo@devstash.io`, bcryptjs-hashed password, 12 rounds), the 7 system item types, and 5 collections with 18 items (snippets, prompts, commands, links with real URLs). Re-runnable: upserts the user, finds-or-updates system types, and recreates the demo user's collections and items. Registered as the Prisma seed command in `prisma.config.ts`; run with `npm run db:seed`. `bcryptjs` added as a dependency.
+- **Dashboard Items** (Completed): Pinned items, the 10 most recent items, and item stats (total, favorites) now load from Neon via Prisma (`src/lib/db/items.ts`: `getPinnedItems`, `getRecentItems`, `getItemStats`), fetched in parallel with the collection data on `/dashboard`. Item card icon and border color come from the item's type, tags are shown as badges, the pinned section is hidden when nothing is pinned, and recent items have an empty state. Mock `getItemType` lookup removed; `formatItemDate` now takes a `Date`. Seed data has no pinned/favorite/tagged items yet, and queries are not yet scoped to a user (no auth). The sidebar still uses mock data.
