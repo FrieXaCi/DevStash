@@ -10,6 +10,12 @@ import {
 } from "lucide-react";
 import { itemTypes, type MockItemType } from "@/lib/mock-data";
 
+export interface ItemTypeDisplay {
+  name: string;
+  icon: string | null;
+  color: string | null;
+}
+
 const TYPE_ICONS: Record<string, LucideIcon> = {
   Code,
   Sparkles,

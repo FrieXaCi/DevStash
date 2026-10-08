@@ -3,14 +3,14 @@ import { CollectionCard } from "@/components/dashboard/CollectionCard";
 import { DashboardSection } from "@/components/dashboard/DashboardSection";
 import { ItemRow } from "@/components/dashboard/ItemRow";
 import { StatsCards } from "@/components/dashboard/StatsCards";
-import {
-  getDashboardCollections,
-  getDashboardStats,
-  getPinnedItems,
-  getRecentItems,
-} from "@/lib/dashboard-data";
+import { getItemStats, getPinnedItems, getRecentItems } from "@/lib/dashboard-data";
+import { getCollectionStats, getRecentCollections } from "@/lib/db/collections";
 
-export default function DashboardPage() {
+// Render per request so the dashboard reflects the current database state
+export const dynamic = "force-dynamic";
+
+export default async function DashboardPage() {
+  const [collections, collectionStats] = await Promise.all([getRecentCollections(), getCollectionStats()]);
   const pinnedItems = getPinnedItems();
 
   return (
@@ -20,14 +20,18 @@ export default function DashboardPage() {
         <p className="text-muted-foreground">Your developer knowledge hub</p>
       </div>
 
-      <StatsCards stats={getDashboardStats()} />
+      <StatsCards stats={{ ...getItemStats(), ...collectionStats }} />
 
       <DashboardSection title="Collections" viewAllHref="/collections">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {getDashboardCollections().map((collection) => (
-            <CollectionCard key={collection.id} collection={collection} />
-          ))}
-        </div>
+        {collections.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {collections.map((collection) => (
+              <CollectionCard key={collection.id} collection={collection} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground">No collections yet.</p>
+        )}
       </DashboardSection>
 
       {pinnedItems.length > 0 && (

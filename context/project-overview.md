@@ -238,7 +238,7 @@ model ItemTag {
 
 Refer tot the screenshots below as a base for the dashboard UI. It does not have to be exactly the same. Use it as a reference:
 
-- @context/screenshots/dashboard-ui-main.pmg
+- @context/screenshots/dashboard-ui-main.png
 - @context/screenshots/dashboard-ui-drawer.png
 
 ### Layout
