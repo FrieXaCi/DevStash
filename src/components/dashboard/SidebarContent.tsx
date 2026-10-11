@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { ArrowRight, Folder, Star } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { SidebarNavLink } from "@/components/dashboard/SidebarNavLink";
 import { SidebarUser } from "@/components/dashboard/SidebarUser";
 import type { DashboardCollection } from "@/lib/db/collections";
-import { getTypeIcon, getTypeLabel } from "@/lib/item-types";
+import { getTypeIcon, getTypeLabel, isProType } from "@/lib/item-types";
 import { getTypeHref, type SidebarData } from "@/lib/sidebar-data";
 
 interface SidebarContentProps {
@@ -89,7 +90,19 @@ export function SidebarContent({ data, collapsed, onNavigate }: SidebarContentPr
               iconColor={type.color ?? undefined}
               collapsed={collapsed}
               onNavigate={onNavigate}
-              trailing={<span className="text-xs text-muted-foreground">{type.itemCount}</span>}
+              trailing={
+                <>
+                  {isProType(type.name) && (
+                    <Badge
+                      variant="outline"
+                      className="h-4 px-1.5 text-[10px] font-semibold tracking-wide text-muted-foreground"
+                    >
+                      PRO
+                    </Badge>
+                  )}
+                  <span className="text-xs text-muted-foreground">{type.itemCount}</span>
+                </>
+              }
             />
           ))}
         </SidebarSection>
