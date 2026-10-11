@@ -1,22 +1,14 @@
-# Current Feature: Add Pro Badge to Sidebar
+# Current Feature
 
 ## Status
 
-In Progress
+Completed
 
 ## Goals
-
-- Show a "PRO" badge next to the File and Image item types in the sidebar
-- Use the ShadCN UI `Badge` component (already installed)
-- Keep the badge clean and subtle
-- Badge text is all uppercase: "PRO"
 
 ## Todo
 
 ## Notes
-
-- Spec: `context/features/add-pro-badge-sidebar.md`
-- File uploads are a Pro feature (see Monetization in the project overview). The badge is display only: no gating logic yet.
 
 ## History
 
@@ -30,3 +22,4 @@ In Progress
 - **Dashboard Items** (Completed): Pinned items, the 10 most recent items, and item stats (total, favorites) now load from Neon via Prisma (`src/lib/db/items.ts`: `getPinnedItems`, `getRecentItems`, `getItemStats`), fetched in parallel with the collection data on `/dashboard`. Item card icon and border color come from the item's type, tags are shown as badges, the pinned section is hidden when nothing is pinned, and recent items have an empty state. Mock `getItemType` lookup removed; `formatItemDate` now takes a `Date`. Seed data has no pinned/favorite/tagged items yet, and queries are not yet scoped to a user (no auth). The sidebar still uses mock data.
 - **Stats & Sidebar** (Completed): Sidebar now loads from Neon via Prisma, fetched in the async `/dashboard` layout (force-dynamic) and passed as props to the client `Sidebar`. System item types (`getSystemItemTypes` in `src/lib/db/items.ts`) show their icon, color and item count, labelled via `getTypeLabel` (`snippet` → "Snippets"), ordered by `SYSTEM_TYPE_ORDER` in `src/lib/item-types.ts`, and link to `/items/[typename]`. Collections (`getSidebarCollections` in `src/lib/db/collections.ts`, sharing a `findCollections` helper with `getRecentCollections`) are grouped under a "Collections" heading: favorites (A–Z, star icon) and the 5 most recent non-favorites (colored dot for the most-used item type), with a "View all collections" link to `/collections`; empty groups are hidden. Mock collection helpers removed from `src/lib/sidebar-data.ts`. Stats cards were already database-driven. `/items/[type]` and `/collections` pages don't exist yet, the user area still uses mock data, and queries are not yet scoped to a user (no auth).
 - **Seed Favorites** (Completed): `prisma/seed.ts` items and collections accept an optional `isFavorite` flag. React Patterns and AI Workflows are favorite collections, and five items are favorites (useDebounce Hook, Code Review Prompt, Deploy Database Migrations, Undo Last Commit, shadcn/ui), so the favorite stats and sidebar stars show real data. Database re-seeded with `npm run db:seed`.
+- **Add Pro Badge to Sidebar** (Completed): File and Image types in the sidebar show a subtle "PRO" badge (ShadCN `Badge`, outline variant, 10px muted text) before the item count, hidden when the sidebar is collapsed. Pro types are defined by `PRO_TYPES` / `isProType()` in `src/lib/item-types.ts`. Display only, no gating yet. Note: the spec marks Image as Pro, while the project overview lists image uploads under the Free plan; resolve before adding gating.
