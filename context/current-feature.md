@@ -1,32 +1,14 @@
-# Current Feature: Optimize Collection Queries
+# Current Feature
 
 ## Status
 
-In Progress
+Completed
 
 ## Goals
 
-- `findCollections` in `src/lib/db/collections.ts` no longer loads every item row (with its type) for every collection
-- `itemCount` comes from Prisma `_count` instead of `items.length`
-- Per-type item counts come from a single `prisma.item.groupBy` over the fetched collection IDs
-- `DashboardCollection` output is unchanged: same `itemCount`, and `types` still sorted most-used first, so the dashboard cards and sidebar look the same
-
 ## Todo
 
-- [x] Create branch `fix/collection-queries`
-- [x] Select `_count: { select: { items: true } }` in `findCollections` instead of the `items` relation
-- [x] Add one `groupBy({ by: ["collectionId", "typeId"], _count: true })` for the fetched collection IDs
-- [x] Load the referenced item types (id, name, icon, color) in one query and build each collection's `types` sorted by count
-- [x] Replace `getTypesByUsage` with the count-based sort
-- [x] Verify dashboard cards and sidebar collections in the browser (border color, type icons, item counts)
-- [x] Run `npm run build`
-
 ## Notes
-
-- Source: High-severity finding from the code-scanner agent run on 2026-10-12.
-- `findCollections` runs 3 times per dashboard request (dashboard recents, sidebar favorites, sidebar recents), so rows fetched currently grow with collections × items.
-- Result is a fixed 3 queries per `findCollections` call (collections, groupBy, types) regardless of item count; skip the extra queries when no collections are returned.
-- Out of scope: the medium/low findings (unbounded pinned items and favorite collections, unused mock data, duplicate `force-dynamic`, etc.) and user scoping (no auth yet).
 
 ## History
 
@@ -41,3 +23,4 @@ In Progress
 - **Stats & Sidebar** (Completed): Sidebar now loads from Neon via Prisma, fetched in the async `/dashboard` layout (force-dynamic) and passed as props to the client `Sidebar`. System item types (`getSystemItemTypes` in `src/lib/db/items.ts`) show their icon, color and item count, labelled via `getTypeLabel` (`snippet` → "Snippets"), ordered by `SYSTEM_TYPE_ORDER` in `src/lib/item-types.ts`, and link to `/items/[typename]`. Collections (`getSidebarCollections` in `src/lib/db/collections.ts`, sharing a `findCollections` helper with `getRecentCollections`) are grouped under a "Collections" heading: favorites (A–Z, star icon) and the 5 most recent non-favorites (colored dot for the most-used item type), with a "View all collections" link to `/collections`; empty groups are hidden. Mock collection helpers removed from `src/lib/sidebar-data.ts`. Stats cards were already database-driven. `/items/[type]` and `/collections` pages don't exist yet, the user area still uses mock data, and queries are not yet scoped to a user (no auth).
 - **Seed Favorites** (Completed): `prisma/seed.ts` items and collections accept an optional `isFavorite` flag. React Patterns and AI Workflows are favorite collections, and five items are favorites (useDebounce Hook, Code Review Prompt, Deploy Database Migrations, Undo Last Commit, shadcn/ui), so the favorite stats and sidebar stars show real data. Database re-seeded with `npm run db:seed`.
 - **Add Pro Badge to Sidebar** (Completed): File and Image types in the sidebar show a subtle "PRO" badge (ShadCN `Badge`, outline variant, 10px muted text) before the item count, hidden when the sidebar is collapsed. Pro types are defined by `PRO_TYPES` / `isProType()` in `src/lib/item-types.ts`. Display only, no gating yet. Note: the spec marks Image as Pro, while the project overview lists image uploads under the Free plan; resolve before adding gating.
+- **Optimize Collection Queries** (Completed): Fixes the high-severity code-scanner finding from 2026-10-12. `findCollections` in `src/lib/db/collections.ts` no longer loads every item row with its type: `itemCount` comes from Prisma `_count`, and per-type usage comes from one `item.groupBy` by `collectionId`/`typeId` plus one item type lookup (`getTypesByCollection`), sorted by count so `types` stays most-used first. Fixed 3 queries per call regardless of item count, skipping the extra 2 when no collections are returned. `getTypesByUsage` removed; `DashboardCollection` output unchanged. Medium/low scanner findings and user scoping remain out of scope.
