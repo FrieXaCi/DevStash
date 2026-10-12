@@ -1,38 +1,14 @@
-# Current Feature: Auth Phase 1 - NextAuth + GitHub Provider
+# Current Feature
 
 ## Status
 
-In Progress
+Completed
 
 ## Goals
 
-- NextAuth v5 (`next-auth@beta`) is set up with the Prisma adapter and JWT session strategy
-- Users can sign in with GitHub OAuth through NextAuth's default sign-in page
-- `/dashboard/*` routes are protected by the Next.js 16 proxy; unauthenticated users are redirected to sign-in
-- After signing in, users are redirected back to `/dashboard`
-- `session.user.id` is available and typed
-
 ## Todo
 
-- [x] Verify current NextAuth v5 / Prisma adapter / Next.js 16 proxy conventions (Context7 API key was rejected; verified against the authjs.dev docs instead)
-- [x] Install `next-auth@beta` and `@auth/prisma-adapter`
-- [x] Add `AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` to `.env` (GitHub values still empty)
-- [x] Create `src/auth.config.ts` (edge-compatible: GitHub provider only, no adapter)
-- [x] Create `src/auth.ts` (full config: Prisma adapter, `session: { strategy: 'jwt' }`, user id on session)
-- [x] Create `src/app/api/auth/[...nextauth]/route.ts` exporting `GET`/`POST` handlers
-- [x] Create `src/proxy.ts` with named export `proxy = auth(...)` protecting `/dashboard/*`
-- [x] Create `src/types/next-auth.d.ts` extending `Session` with `user.id`
-- [x] Test: `/dashboard` redirects to sign-in, GitHub sign-in works, redirects back to `/dashboard`
-- [x] Run `npm run build` and fix any errors
-
 ## Notes
-
-- Spec: `context/features/auth-phase-1-spec.md`
-- Use `next-auth@beta`, not `@latest` (that installs v4)
-- Proxy file must be at `src/proxy.ts` (same level as `app/`), with a named `proxy` export, not a default export
-- Don't set a custom `pages.signIn`; use NextAuth's default page
-- The Prisma schema already has the NextAuth `Account`/`Session`/`VerificationToken` models from the initial migration
-- References: https://authjs.dev/getting-started/installation#edge-compatibility, https://authjs.dev/getting-started/adapters/prisma
 
 ## History
 
@@ -48,3 +24,4 @@ In Progress
 - **Seed Favorites** (Completed): `prisma/seed.ts` items and collections accept an optional `isFavorite` flag. React Patterns and AI Workflows are favorite collections, and five items are favorites (useDebounce Hook, Code Review Prompt, Deploy Database Migrations, Undo Last Commit, shadcn/ui), so the favorite stats and sidebar stars show real data. Database re-seeded with `npm run db:seed`.
 - **Add Pro Badge to Sidebar** (Completed): File and Image types in the sidebar show a subtle "PRO" badge (ShadCN `Badge`, outline variant, 10px muted text) before the item count, hidden when the sidebar is collapsed. Pro types are defined by `PRO_TYPES` / `isProType()` in `src/lib/item-types.ts`. Display only, no gating yet. Note: the spec marks Image as Pro, while the project overview lists image uploads under the Free plan; resolve before adding gating.
 - **Optimize Collection Queries** (Completed): Fixes the high-severity code-scanner finding from 2026-10-12. `findCollections` in `src/lib/db/collections.ts` no longer loads every item row with its type: `itemCount` comes from Prisma `_count`, and per-type usage comes from one `item.groupBy` by `collectionId`/`typeId` plus one item type lookup (`getTypesByCollection`), sorted by count so `types` stays most-used first. Fixed 3 queries per call regardless of item count, skipping the extra 2 when no collections are returned. `getTypesByUsage` removed; `DashboardCollection` output unchanged. Medium/low scanner findings and user scoping remain out of scope.
+- **Auth Phase 1 - NextAuth + GitHub Provider** (Completed): `next-auth@5.0.0-beta.32` and `@auth/prisma-adapter` installed. Split config: `src/auth.config.ts` (GitHub provider only) and `src/auth.ts` (Prisma adapter, JWT sessions, `session.user.id` set from `token.sub`). Route handler at `src/app/api/auth/[...nextauth]/route.ts`; `src/proxy.ts` (named `proxy` export, matcher `/dashboard/:path*`) redirects unauthenticated users to NextAuth's default sign-in page with a `callbackUrl` back to the requested page. `session.user.id` typed in `src/types/next-auth.d.ts`. `AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` in `.env` and `.env.production`. Verified: `/dashboard` redirects, GitHub sign-in returns to `/dashboard`, and the adapter creates `User` + `Account` rows on the Neon dev branch. Context7 rejected its API key (likely the uncommitted `${env:CONTEXT7_API_KEY}` change in `.mcp.json`); conventions were checked against authjs.dev. No sign-out UI yet; dashboard queries still not scoped to the user.
