@@ -1,14 +1,38 @@
-# Current Feature
+# Current Feature: Auth Phase 1 - NextAuth + GitHub Provider
 
 ## Status
 
-Completed
+In Progress
 
 ## Goals
 
+- NextAuth v5 (`next-auth@beta`) is set up with the Prisma adapter and JWT session strategy
+- Users can sign in with GitHub OAuth through NextAuth's default sign-in page
+- `/dashboard/*` routes are protected by the Next.js 16 proxy; unauthenticated users are redirected to sign-in
+- After signing in, users are redirected back to `/dashboard`
+- `session.user.id` is available and typed
+
 ## Todo
 
+- [x] Verify current NextAuth v5 / Prisma adapter / Next.js 16 proxy conventions (Context7 API key was rejected; verified against the authjs.dev docs instead)
+- [x] Install `next-auth@beta` and `@auth/prisma-adapter`
+- [x] Add `AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` to `.env` (GitHub values still empty)
+- [x] Create `src/auth.config.ts` (edge-compatible: GitHub provider only, no adapter)
+- [x] Create `src/auth.ts` (full config: Prisma adapter, `session: { strategy: 'jwt' }`, user id on session)
+- [x] Create `src/app/api/auth/[...nextauth]/route.ts` exporting `GET`/`POST` handlers
+- [x] Create `src/proxy.ts` with named export `proxy = auth(...)` protecting `/dashboard/*`
+- [x] Create `src/types/next-auth.d.ts` extending `Session` with `user.id`
+- [x] Test: `/dashboard` redirects to sign-in, GitHub sign-in works, redirects back to `/dashboard`
+- [x] Run `npm run build` and fix any errors
+
 ## Notes
+
+- Spec: `context/features/auth-phase-1-spec.md`
+- Use `next-auth@beta`, not `@latest` (that installs v4)
+- Proxy file must be at `src/proxy.ts` (same level as `app/`), with a named `proxy` export, not a default export
+- Don't set a custom `pages.signIn`; use NextAuth's default page
+- The Prisma schema already has the NextAuth `Account`/`Session`/`VerificationToken` models from the initial migration
+- References: https://authjs.dev/getting-started/installation#edge-compatibility, https://authjs.dev/getting-started/adapters/prisma
 
 ## History
 
