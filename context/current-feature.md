@@ -1,14 +1,32 @@
-# Current Feature
+# Current Feature: Optimize Collection Queries
 
 ## Status
 
-Completed
+In Progress
 
 ## Goals
 
+- `findCollections` in `src/lib/db/collections.ts` no longer loads every item row (with its type) for every collection
+- `itemCount` comes from Prisma `_count` instead of `items.length`
+- Per-type item counts come from a single `prisma.item.groupBy` over the fetched collection IDs
+- `DashboardCollection` output is unchanged: same `itemCount`, and `types` still sorted most-used first, so the dashboard cards and sidebar look the same
+
 ## Todo
 
+- [x] Create branch `fix/collection-queries`
+- [x] Select `_count: { select: { items: true } }` in `findCollections` instead of the `items` relation
+- [x] Add one `groupBy({ by: ["collectionId", "typeId"], _count: true })` for the fetched collection IDs
+- [x] Load the referenced item types (id, name, icon, color) in one query and build each collection's `types` sorted by count
+- [x] Replace `getTypesByUsage` with the count-based sort
+- [x] Verify dashboard cards and sidebar collections in the browser (border color, type icons, item counts)
+- [x] Run `npm run build`
+
 ## Notes
+
+- Source: High-severity finding from the code-scanner agent run on 2026-10-12.
+- `findCollections` runs 3 times per dashboard request (dashboard recents, sidebar favorites, sidebar recents), so rows fetched currently grow with collections × items.
+- Result is a fixed 3 queries per `findCollections` call (collections, groupBy, types) regardless of item count; skip the extra queries when no collections are returned.
+- Out of scope: the medium/low findings (unbounded pinned items and favorite collections, unused mock data, duplicate `force-dynamic`, etc.) and user scoping (no auth yet).
 
 ## History
 

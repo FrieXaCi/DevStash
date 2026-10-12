@@ -24,21 +24,39 @@ export interface CollectionStats {
   favoriteCollections: number;
 }
 
-function getTypesByUsage(itemTypes: CollectionType[]): CollectionType[] {
-  const usage = new Map<string, { type: CollectionType; count: number }>();
-
-  for (const type of itemTypes) {
-    const entry = usage.get(type.id);
-    if (entry) entry.count++;
-    else usage.set(type.id, { type, count: 1 });
-  }
-
-  return [...usage.values()].sort((a, b) => b.count - a.count).map(({ type }) => type);
-}
-
 export interface SidebarCollections {
   favorites: DashboardCollection[];
   recents: DashboardCollection[];
+}
+
+// One groupBy for all collections, then one lookup for the referenced types
+async function getTypesByCollection(collectionIds: string[]): Promise<Map<string, CollectionType[]>> {
+  const typeCounts = await prisma.item.groupBy({
+    by: ["collectionId", "typeId"],
+    where: { collectionId: { in: collectionIds } },
+    _count: true,
+  });
+
+  const typeIds = [...new Set(typeCounts.map(({ typeId }) => typeId))];
+  const types = await prisma.itemType.findMany({
+    where: { id: { in: typeIds } },
+    select: { id: true, name: true, icon: true, color: true },
+  });
+  const typesById = new Map(types.map((type) => [type.id, type]));
+
+  const typesByCollection = new Map<string, CollectionType[]>();
+  const sortedCounts = [...typeCounts].sort((a, b) => b._count - a._count);
+
+  for (const { collectionId, typeId } of sortedCounts) {
+    const type = typesById.get(typeId);
+    if (!collectionId || !type) continue;
+
+    const collectionTypes = typesByCollection.get(collectionId) ?? [];
+    collectionTypes.push(type);
+    typesByCollection.set(collectionId, collectionTypes);
+  }
+
+  return typesByCollection;
 }
 
 async function findCollections(args: {
@@ -53,16 +71,18 @@ async function findCollections(args: {
       name: true,
       description: true,
       isFavorite: true,
-      items: {
-        select: { type: { select: { id: true, name: true, icon: true, color: true } } },
-      },
+      _count: { select: { items: true } },
     },
   });
 
-  return collections.map(({ items, ...collection }) => ({
+  if (collections.length === 0) return [];
+
+  const typesByCollection = await getTypesByCollection(collections.map(({ id }) => id));
+
+  return collections.map(({ _count, ...collection }) => ({
     ...collection,
-    itemCount: items.length,
-    types: getTypesByUsage(items.map((item) => item.type)),
+    itemCount: _count.items,
+    types: typesByCollection.get(collection.id) ?? [],
   }));
 }
 
