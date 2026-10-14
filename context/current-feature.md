@@ -1,14 +1,32 @@
-# Current Feature
+# Current Feature: Link GitHub to Existing Email Account
 
 ## Status
 
-Completed
+In Progress
 
 ## Goals
 
+- A user who registered with email/password can also sign in with GitHub when their GitHub email is the same
+- Signing in with GitHub links the GitHub account to the existing user (new `Account` row, no duplicate `User`)
+- After linking, the user can pick either method on `/sign-in`, and both land on the same account and data
+- No more `OAuthAccountNotLinked` error for this case
+
 ## Todo
 
+- [x] Enable email account linking on the GitHub provider in `src/auth.config.ts` (`allowDangerousEmailAccountLinking: true`)
+- [x] Check that the linked sign-in keeps the existing user's name and password, and fills in `image` only if it's empty (adapter/`events.linkAccount` if needed)
+- [x] Keep the `OAuthAccountNotLinked` message on `/sign-in` for other cases, or reword it if it no longer applies
+- [ ] Test: register with email/password, sign in with GitHub using the same email, confirm one `User` with a `credentials`-free user plus a `github` `Account` row on the Neon dev branch
+- [ ] Test: sign out, then sign in with email/password again on the same account
+- [ ] Clean up test users on the Neon dev branch (ask before deleting)
+- [x] `npm run build` passes
+
 ## Notes
+
+- Today, Auth.js refuses to link an OAuth account to an existing user with the same email and redirects with `OAuthAccountNotLinked` (noted as known in Auth Phase 2).
+- `allowDangerousEmailAccountLinking` is acceptable for GitHub because GitHub only returns verified emails. The risk: anyone who controls that email on GitHub gets access to the DevStash account.
+- Safer alternative (not chosen): link GitHub from a signed-in `/profile` page. That needs the profile page first, which doesn't exist yet.
+- Out of scope: the reverse case. A user who signed up with GitHub and then tries `/register` with the same email still gets 409. Setting a password for a GitHub user can come with the profile page.
 
 ## History
 

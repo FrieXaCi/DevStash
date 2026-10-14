@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Sign in · DevStash" };
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   CredentialsSignin: "Invalid email or password.",
   OAuthAccountNotLinked:
-    "This email is already registered with a password. Sign in with email and password instead.",
+    "This GitHub account is already linked to another DevStash account.",
 };
 const DEFAULT_AUTH_ERROR = "Sign-in failed. Please try again.";
 

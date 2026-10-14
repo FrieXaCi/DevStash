@@ -36,4 +36,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
+  events: {
+    // Linking to an existing user keeps its data; only fill in a missing avatar.
+    async linkAccount({ user, profile }) {
+      if (user.image || !profile.image || !user.id) return;
+      await prisma.user.update({ where: { id: user.id }, data: { image: profile.image } });
+      // Same object the jwt callback receives, so the avatar shows on this sign-in.
+      user.image = profile.image;
+    },
+  },
 });
