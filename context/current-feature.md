@@ -1,35 +1,14 @@
-# Current Feature: Auth Phase 2 - Credentials Provider
+# Current Feature
 
 ## Status
 
-In Progress
+Completed
 
 ## Goals
 
-- Users can register with name, email and password via `POST /api/auth/register`
-- Users can sign in with email/password and land on `/dashboard`
-- Passwords are hashed with bcryptjs; plaintext is never stored
-- GitHub OAuth keeps working
-
 ## Todo
 
-- [x] Verify `password` field on `User` (already present, no migration needed)
-- [x] Install `zod` for input validation
-- [x] Add Credentials provider placeholder (`authorize: () => null`) to `src/auth.config.ts`
-- [x] Override Credentials in `src/auth.ts` with bcrypt validation
-- [x] Create `POST /api/auth/register` route (validate, check existing user, hash, create)
-- [x] Test registration via curl
-- [x] Test email/password sign-in redirects to `/dashboard`
-- [x] Verify GitHub OAuth still works (redirect to GitHub verified; full round-trip needs manual login)
-- [x] `npm run build` passes
-
 ## Notes
-
-- Spec: `context/features/auth-phase-2-spec.md`
-- Split pattern: `auth.config.ts` holds an edge-safe placeholder; `auth.ts` replaces it with the real `authorize` (Prisma + bcrypt).
-- Credentials requires JWT sessions (already configured).
-- Register body: name, email, password, confirmPassword. Passwords must match; reject existing emails.
-- Reference: https://authjs.dev/getting-started/authentication/credentials
 
 ## History
 
@@ -46,3 +25,4 @@ In Progress
 - **Add Pro Badge to Sidebar** (Completed): File and Image types in the sidebar show a subtle "PRO" badge (ShadCN `Badge`, outline variant, 10px muted text) before the item count, hidden when the sidebar is collapsed. Pro types are defined by `PRO_TYPES` / `isProType()` in `src/lib/item-types.ts`. Display only, no gating yet. Note: the spec marks Image as Pro, while the project overview lists image uploads under the Free plan; resolve before adding gating.
 - **Optimize Collection Queries** (Completed): Fixes the high-severity code-scanner finding from 2026-10-12. `findCollections` in `src/lib/db/collections.ts` no longer loads every item row with its type: `itemCount` comes from Prisma `_count`, and per-type usage comes from one `item.groupBy` by `collectionId`/`typeId` plus one item type lookup (`getTypesByCollection`), sorted by count so `types` stays most-used first. Fixed 3 queries per call regardless of item count, skipping the extra 2 when no collections are returned. `getTypesByUsage` removed; `DashboardCollection` output unchanged. Medium/low scanner findings and user scoping remain out of scope.
 - **Auth Phase 1 - NextAuth + GitHub Provider** (Completed): `next-auth@5.0.0-beta.32` and `@auth/prisma-adapter` installed. Split config: `src/auth.config.ts` (GitHub provider only) and `src/auth.ts` (Prisma adapter, JWT sessions, `session.user.id` set from `token.sub`). Route handler at `src/app/api/auth/[...nextauth]/route.ts`; `src/proxy.ts` (named `proxy` export, matcher `/dashboard/:path*`) redirects unauthenticated users to NextAuth's default sign-in page with a `callbackUrl` back to the requested page. `session.user.id` typed in `src/types/next-auth.d.ts`. `AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` in `.env` and `.env.production`. Verified: `/dashboard` redirects, GitHub sign-in returns to `/dashboard`, and the adapter creates `User` + `Account` rows on the Neon dev branch. Context7 rejected its API key (likely the uncommitted `${env:CONTEXT7_API_KEY}` change in `.mcp.json`); conventions were checked against authjs.dev. No sign-out UI yet; dashboard queries still not scoped to the user.
+- **Auth Phase 2 - Credentials Provider** (Completed): Email/password sign-in via the Auth.js Credentials provider, split pattern: `src/auth.config.ts` holds an edge-safe placeholder (`authorize: () => null`, shared `CREDENTIALS_FIELDS`), and `src/auth.ts` swaps it for the real `authorize` (Zod-validated, Prisma lookup, `bcrypt.compare`). `POST /api/auth/register` (`src/app/api/auth/register/route.ts`) validates name/email/password/confirmPassword, hashes with bcryptjs (12 rounds) and returns `{ success, data, error }`: 201 created, 400 invalid body or input, 409 existing email (including concurrent duplicates via Prisma `P2002`). `zod` added; schemas in `src/lib/auth-schemas.ts` (emails trimmed and lowercased, passwords 8–72 chars). `User.password` already existed, so no migration. Verified: curl registration cases, wrong password rejected, sign-in lands on `/dashboard`, GitHub OAuth still redirects to GitHub. Test users `test@test.com` and `race@test.com` remain on the Neon dev branch. No rate limiting; same-email GitHub sign-in after registering shows `OAuthAccountNotLinked` (Auth.js default).
