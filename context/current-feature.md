@@ -1,32 +1,14 @@
-# Current Feature: Link GitHub to Existing Email Account
+# Current Feature
 
 ## Status
 
-In Progress
+Completed
 
 ## Goals
 
-- A user who registered with email/password can also sign in with GitHub when their GitHub email is the same
-- Signing in with GitHub links the GitHub account to the existing user (new `Account` row, no duplicate `User`)
-- After linking, the user can pick either method on `/sign-in`, and both land on the same account and data
-- No more `OAuthAccountNotLinked` error for this case
-
 ## Todo
 
-- [x] Enable email account linking on the GitHub provider in `src/auth.config.ts` (`allowDangerousEmailAccountLinking: true`)
-- [x] Check that the linked sign-in keeps the existing user's name and password, and fills in `image` only if it's empty (adapter/`events.linkAccount` if needed)
-- [x] Keep the `OAuthAccountNotLinked` message on `/sign-in` for other cases, or reword it if it no longer applies
-- [ ] Test: register with email/password, sign in with GitHub using the same email, confirm one `User` with a `credentials`-free user plus a `github` `Account` row on the Neon dev branch
-- [ ] Test: sign out, then sign in with email/password again on the same account
-- [ ] Clean up test users on the Neon dev branch (ask before deleting)
-- [x] `npm run build` passes
-
 ## Notes
-
-- Today, Auth.js refuses to link an OAuth account to an existing user with the same email and redirects with `OAuthAccountNotLinked` (noted as known in Auth Phase 2).
-- `allowDangerousEmailAccountLinking` is acceptable for GitHub because GitHub only returns verified emails. The risk: anyone who controls that email on GitHub gets access to the DevStash account.
-- Safer alternative (not chosen): link GitHub from a signed-in `/profile` page. That needs the profile page first, which doesn't exist yet.
-- Out of scope: the reverse case. A user who signed up with GitHub and then tries `/register` with the same email still gets 409. Setting a password for a GitHub user can come with the profile page.
 
 ## History
 
@@ -45,3 +27,4 @@ In Progress
 - **Auth Phase 1 - NextAuth + GitHub Provider** (Completed): `next-auth@5.0.0-beta.32` and `@auth/prisma-adapter` installed. Split config: `src/auth.config.ts` (GitHub provider only) and `src/auth.ts` (Prisma adapter, JWT sessions, `session.user.id` set from `token.sub`). Route handler at `src/app/api/auth/[...nextauth]/route.ts`; `src/proxy.ts` (named `proxy` export, matcher `/dashboard/:path*`) redirects unauthenticated users to NextAuth's default sign-in page with a `callbackUrl` back to the requested page. `session.user.id` typed in `src/types/next-auth.d.ts`. `AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` in `.env` and `.env.production`. Verified: `/dashboard` redirects, GitHub sign-in returns to `/dashboard`, and the adapter creates `User` + `Account` rows on the Neon dev branch. Context7 rejected its API key (likely the uncommitted `${env:CONTEXT7_API_KEY}` change in `.mcp.json`); conventions were checked against authjs.dev. No sign-out UI yet; dashboard queries still not scoped to the user.
 - **Auth Phase 2 - Credentials Provider** (Completed): Email/password sign-in via the Auth.js Credentials provider, split pattern: `src/auth.config.ts` holds an edge-safe placeholder (`authorize: () => null`, shared `CREDENTIALS_FIELDS`), and `src/auth.ts` swaps it for the real `authorize` (Zod-validated, Prisma lookup, `bcrypt.compare`). `POST /api/auth/register` (`src/app/api/auth/register/route.ts`) validates name/email/password/confirmPassword, hashes with bcryptjs (12 rounds) and returns `{ success, data, error }`: 201 created, 400 invalid body or input, 409 existing email (including concurrent duplicates via Prisma `P2002`). `zod` added; schemas in `src/lib/auth-schemas.ts` (emails trimmed and lowercased, passwords 8–72 chars). `User.password` already existed, so no migration. Verified: curl registration cases, wrong password rejected, sign-in lands on `/dashboard`, GitHub OAuth still redirects to GitHub. Test users `test@test.com` and `race@test.com` were deleted from the Neon dev branch afterwards. No rate limiting; same-email GitHub sign-in after registering shows `OAuthAccountNotLinked` (Auth.js default).
 - **Auth Phase 3 - Sign In, Register & Sign Out UI** (Completed): Custom auth pages in the `src/app/(auth)` route group (centered logo layout, ShadCN `Card`). `/sign-in` has a GitHub button, an email/password form using `useActionState` with the `signInWithCredentials` server action (`src/actions/auth.ts`, Zod-validated, returns `{ success, error }`, email kept as a controlled input across React's form reset), a register link, friendly messages for `?error=` codes (`CredentialsSignin`, `OAuthAccountNotLinked`, generic fallback) and an "Account created" notice after registering. `/register` validates with `registerSchema` in the browser (per-field errors via `z.flattenError`), POSTs to `/api/auth/register` and redirects to `/sign-in?registered=1`. Both pages redirect signed-in users to `/dashboard`. NextAuth `pages.signIn` and `pages.error` point to `/sign-in`; `src/proxy.ts` redirects there with a relative `callbackUrl`, and the actions only accept same-site relative redirects. Sidebar user area uses the session user (fetched in the dashboard layout, passed through `Sidebar` → `SidebarContent` → `SidebarUser`) with a reusable `UserAvatar` (`src/components/auth/UserAvatar.tsx`: GitHub image or initials, email fallback) and a ShadCN `DropdownMenu` (opens up, or right when collapsed) with "Profile" (`/profile`, not built yet) and "Sign out" (`signOutUser` → `/sign-in`). Shared `FormField`, `FormAlert`, inline `GitHubIcon` (lucide 1.x has no brand icons), `ActionResult` type in `src/types/actions.ts`; ShadCN `dropdown-menu` and `label` added. Verified in the browser: register validation and success, wrong/correct password, menu open and collapsed, sign out, signed-in redirects, GitHub button reaches GitHub. Known: JWT sessions for deleted users stay valid until expiry; `currentUser` in `src/lib/mock-data.ts` is now unused. Test users and the GitHub user were deleted from the Neon dev branch afterwards (demo user kept).
+- **Link GitHub to Existing Email Account** (Completed): The GitHub provider in `src/auth.config.ts` sets `allowDangerousEmailAccountLinking: true` (acceptable because GitHub only returns verified emails), so GitHub sign-in with the same email as an email/password user links a `github` `Account` to that user instead of failing with `OAuthAccountNotLinked`. A custom GitHub `profile` lowercases the email to match registered (lowercased) emails. Linking leaves the existing user's name and password untouched; `events.linkAccount` in `src/auth.ts` fills in the GitHub avatar only when `image` is empty, also on the in-flight user so the JWT has it on the first linked sign-in. The `OAuthAccountNotLinked` message on `/sign-in` now reads "This GitHub account is already linked to another DevStash account." Verified on production (`https://dev-stash-beta.vercel.app`): register, GitHub sign-in, sign out, email/password sign-in, with one `User` and one `github` `Account` row. The test user was deleted afterwards, and production was seeded with `npm run db:seed` (using `.env.production`) so dev and production now match: same `init` migration, only the demo user with 5 collections and 18 items. Out of scope: GitHub-first users still get 409 on `/register`; linking from a `/profile` page is the safer future alternative.
