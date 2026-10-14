@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Session } from "next-auth";
 import { ArrowRight, Folder, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -10,6 +11,7 @@ import { getTypeHref, type SidebarData } from "@/lib/sidebar-data";
 
 interface SidebarContentProps {
   data: SidebarData;
+  user: Session["user"];
   collapsed: boolean;
   onNavigate?: () => void;
 }
@@ -74,7 +76,7 @@ function CollectionLinks({ collections, collapsed, onNavigate }: CollectionLinks
   ));
 }
 
-export function SidebarContent({ data, collapsed, onNavigate }: SidebarContentProps) {
+export function SidebarContent({ data, user, collapsed, onNavigate }: SidebarContentProps) {
   const { itemTypes, favorites, recents } = data;
 
   return (
@@ -137,7 +139,7 @@ export function SidebarContent({ data, collapsed, onNavigate }: SidebarContentPr
         </SidebarSection>
       </nav>
 
-      <SidebarUser collapsed={collapsed} />
+      <SidebarUser user={user} collapsed={collapsed} onNavigate={onNavigate} />
     </div>
   );
 }
