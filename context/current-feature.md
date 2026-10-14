@@ -1,14 +1,35 @@
-# Current Feature
+# Current Feature: Auth Phase 2 - Credentials Provider
 
 ## Status
 
-Completed
+In Progress
 
 ## Goals
 
+- Users can register with name, email and password via `POST /api/auth/register`
+- Users can sign in with email/password and land on `/dashboard`
+- Passwords are hashed with bcryptjs; plaintext is never stored
+- GitHub OAuth keeps working
+
 ## Todo
 
+- [x] Verify `password` field on `User` (already present, no migration needed)
+- [x] Install `zod` for input validation
+- [x] Add Credentials provider placeholder (`authorize: () => null`) to `src/auth.config.ts`
+- [x] Override Credentials in `src/auth.ts` with bcrypt validation
+- [x] Create `POST /api/auth/register` route (validate, check existing user, hash, create)
+- [x] Test registration via curl
+- [x] Test email/password sign-in redirects to `/dashboard`
+- [x] Verify GitHub OAuth still works (redirect to GitHub verified; full round-trip needs manual login)
+- [x] `npm run build` passes
+
 ## Notes
+
+- Spec: `context/features/auth-phase-2-spec.md`
+- Split pattern: `auth.config.ts` holds an edge-safe placeholder; `auth.ts` replaces it with the real `authorize` (Prisma + bcrypt).
+- Credentials requires JWT sessions (already configured).
+- Register body: name, email, password, confirmPassword. Passwords must match; reject existing emails.
+- Reference: https://authjs.dev/getting-started/authentication/credentials
 
 ## History
 
